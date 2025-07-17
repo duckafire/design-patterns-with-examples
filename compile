@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+#########################################################################################
+
+set -o pipefail
+
+declare -ri TRUE=0
+declare -ri FALSE=1
+
+if [[ $# -eq 0 ]]; then
+	# group: subdirectory name from "./pattern/"
+	echo './compile [-a] [-g <groupA>] <file-A1> [...] [file-AN] ... [-g <groupB>] [file-B0] ...'
+	exit 0
+fi
+
+declare -r INPUT=("${@}")
+declare -r ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
+message(){
+	echo "[${BASH_LINENO[0]}] $1."
+}
+
+#########################################################################################
+
+declare -r SRC_DIR="$ROOT/patterns"
+declare -r DEST_DIR="$ROOT/bin"
+
+if [[ ! -d "$SRC_DIR" ]]; then
+	message "Directory ('$SRC_DIR') not found"
+	exit 1
+fi
+
+#########################################################################################
+
+declare src_file=""
+declare dest_file=""
+declare full_dest_dir=""
+declare sub_dir=""
+
+declare -i gpp_status=0
+declare -i is_sub_dir=$FALSE
+declare -i sub_dir_memory=0
+declare -i sub_dir_memory_storage=0
+
+
+separator(){
+	echo -e "\n#########################################################################################\n"
+}
+
+separator
+
+for input in ${INPUT[@]}; do
+	if [[ $is_sub_dir -eq $TRUE ]]; then
+		# $sub_dir can be empty, then it must be container "/" as suffix.
+		# if empty:     $SRC/$sub_dir$foo -> ./foo.bar
+		# if not empty: $SRC/$sub_dir$foo -> ./foo/sub/foo.bar
+		sub_dir="$input/"
+		is_sub_dir=$FALSE
+
+		if [[ ! -d "$SRC_DIR/$sub_dir" ]]; then
+			message "Subdirectory ('$SRC_DIR/$sub_dir') not found"
+			sub_dir=""
+			separator
+		fi
+		continue
+	fi
+
+	if [[ "$input" = "-d" ]]; then
+		is_sub_dir=$TRUE
+		sub_dir_memory=sub_dir_memory+1
+		continue
+	fi
+
+
+	if [[ $sub_dir_memory -gt $sub_dir_memory_storage ]]; then
+		sub_dir_memory_storage=$sub_dir_memory
+		full_dest_dir="$DEST_DIR/$sub_dir"
+
+		test ! -d "$full_dest_dir" && mkdir --parents "$full_dest_dir"
+	fi
+
+
+	src_file="$SRC_DIR/$sub_dir$input.cpp"
+	dest_file="$full_dest_dir$input"
+
+	if [[ ! -f "$src_file" ]]; then
+		message "File ('$src_file') not found"
+		separator
+		continue
+	fi
+
+
+	g++ "$src_file" -o "$dest_file"
+	gpp_status=$?
+
+	if [[ $gpp_status -eq 0 ]]; then
+		message "The file ('$src_file') was compiled"
+	else
+		message "A compilation error occur. File: '$src_file'"
+	fi
+
+	separator
+done
+
+#########################################################################################
