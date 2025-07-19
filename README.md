@@ -36,7 +36,7 @@ usage instructions, descriptions and tips related to the patterns in this sectio
 	* [Builder](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/creational/builder.cpp)
 	* \*[Factory Method](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/creational/factory-method.cpp)
 	* \*[Prototype](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/creational/prototype.cpp)
-	* \*[Singleton](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/creational/singleton.cpp)
+	* [Singleton](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/creational/singleton.cpp)
 * **Structural**
 	* \*[Adapter](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/structural/adapter.cpp)
 	* \*[Bridge](https://github.com/duckafire/design-patterns-with-examples/blob/main/patterns/structural/bridge.cpp)
