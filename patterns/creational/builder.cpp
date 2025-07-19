@@ -68,7 +68,7 @@ public:
 	short hp, speed, gravity;
 	unsigned short width, height;
 
-	Player(){
+	Player(void){
 		// necessary to instance an empty "product"
 	}
 
