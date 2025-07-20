@@ -52,9 +52,10 @@ public:
 
 	TBuilder* build(void){
 		TBuilder *tmp;
-		tmp = new TBuilder(this->_product);
+		tmp = new TBuilder(*(this->_product));
 
-		// it is safe; see: https://isocpp.org/wiki/faq/freestore-mgmt#delete-this
+		// it is safe,
+		// see: https://isocpp.org/wiki/faq/freestore-mgmt#delete-this
 		delete this;
 		return tmp;
 	}
@@ -72,17 +73,7 @@ public:
 		// necessary to instance an empty "product"
 	}
 
-	Player(const Player *builderProduct){
-		this->x         = builderProduct->x;
-		this->y         = builderProduct->y;
-		this->width     = builderProduct->width;
-		this->height    = builderProduct->height;
-		this->hp        = builderProduct->hp;
-		this->speed     = builderProduct->speed;
-		this->gravity   = builderProduct->gravity;
-		this->isRunning = builderProduct->isRunning;
-		this->isFalling = builderProduct->isFalling;
-	}
+	Player(const Player &builderProduct) = default;
 
 	void display_status(void){
 		std::cout << "X: "          << this->x         << std::endl;
