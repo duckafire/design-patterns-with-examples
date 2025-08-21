@@ -1,103 +1,116 @@
 /*
 
-PROTOTYPE: allows to create a copy (shallow or deep) of a instantiated object, in
-an easy way.
+PROTOTYPE: allows create a copy of an instantiated object,
+in an wasy eay.
 
-It is useful to create multiple "expensive" objects.
+It is useful to create multiple "expensive" objects. It is
+commonly implemented as a method named as `clone` or `copy`.
 
-It is commonly implemented as a method named as "clone" or "copy".
+This pattern do not specific the type of the copy, so you
+are free to decide what use. The types "available" are:
 
-For more information about the shallow and deep copy, see:
-https://stackoverflow.com/questions/184710/what-is-the-difference-between-a-deep-copy-and-a-shallow-copy?page=1&tab=scoredesc#tab-top
+* Shallow: the properties values are shared between the
+original and the clone object, in other words, the
+properties of both objects will point to some memory
+address.
+
+* Deep: the properties values are cloned too. So, the
+properties of each object will point to equal values
+(until that one is changed), that they are store in
+different memory address.
+
+* Mixed: a mix between shallow and deep clones.
 
 */
 
-#include <iostream>
+#include <cstdio>
 
-#define PRINT(txt, attr, pre) \
-	std::cout << txt ": \t" << attr << " \t" << pre (attr) << std::endl
-
-#define END \
-	std::cout << std::endl;
-
-class PetInfo {
+// Prototype Abstract Class
+class IClone
+{
 public:
-	virtual void get_info(void) const = 0;
+	// This is necessary to call the derived
+	// class destructor after destroy an
+	// instance of a derived object that it
+	// is stored in a pointer of this (IClone)
+	// type.
+	virtual ~IClone(){}
+
+	virtual IClone* clone(void) const = 0;
 };
 
-// SHALLOW COPY:
-// all properties of the copy POINTS TO the SAME value ADDRESS.
-class Dog: public PetInfo {
+// Concrete Prototype
+class Bacterium: public IClone
+{
 private:
-	const char *name;
-	const char *age;
-	const char *breed;
-
+	const char *type;
+	const char *specie;
+	bool alive;
+	
 public:
-	Dog(const char *_name, const char *_age, const char *_breed):
-		name(_name),
-		age(_age),
-		breed(_breed) {
+	Bacterium(const char *_type, const char *_specie):
+		type(_type),
+		specie(_specie)
+	{
+		this->alive = true;
 	}
 
-	// copy constructor
-	Dog(const Dog &other) = default;
+	// CLONE CONSTRUCTOR:
+	// Create an object which properties
+	// will receive the values stored in
+	// `other` properties, i.e.:
+	// this->alive = other->alive;
+	Bacterium(const Bacterium &other) = default; // mixed clone
 
-	Dog* clone(void) const {
-		return new Dog(*this);
+	// Maybe you prefer use an unique or
+	// a shared pointer.
+	IClone* clone(void) const override
+	{
+		return new Bacterium(*this);
 	}
 
-	void get_info(void) const override {
-		PRINT("Name",  this->name,  (void*));
-		PRINT("Age",   this->age,   (void*));
-		PRINT("Breed", this->breed, (void*));
-		END;
+	void info(void) const
+	{
+		printf("Bacterium:\n  Type:   %s\n  Specie: %s\n  Health: %s\n", this->type, this->specie, (this->alive ? "OK" : "Dead"));
 	}
 };
 
-// DEEP COPY:
-// all properties of the copy POINTS TO a DIFFERENT value ADDRESS.
-class Cat: public PetInfo {
-private:
-	std::string name;
-	std::string age;
-	std::string breed;
+// Client Code
+void example_with_middler(void)
+{
+	Bacterium *origi, *clone;
+	IClone *middl;
 
-public:
-	Cat(std::string _name, std::string _age, std::string _breed):
-		name(_name),
-		age(_age),
-		breed(_breed) {
-	}
+	origi = new Bacterium("cocci", "vaillonella");
+	middl = origi->clone();
+	clone = (Bacterium*)middl;
 
-	// copy constructor
-	Cat(const Cat &other) = default;
+	origi->info();
+	clone->info();
 
-	Cat* clone(void) const {
-		return new Cat(*this);
-	}
+	delete origi, clone;
+}
 
-	void get_info(void) const override {
-		PRINT("Name",  this->name,  &);
-		PRINT("Age",   this->age,   &);
-		PRINT("Breed", this->breed, &);
-		END;
-	}
-};
+void example_without_middler(void)
+{
+	Bacterium *origi;
+	IClone *clone;
 
-int main(void){
-	Dog *dog       = new Dog("Rex", "2", "Boxer");
-	Dog *clonedDog = dog->clone();
+	origi = new Bacterium("bacilli", "albus");
+	clone = origi->clone();
 
-	Cat *cat       = new Cat("Milly", "5", "Bombay");
-	Cat *clonedCat = cat->clone();
+	origi->info();
+	((Bacterium*)clone)->info();
 
-	dog->get_info();
-	clonedDog->get_info();
+	delete origi, clone;
+}
 
-	cat->get_info();
-	clonedCat->get_info();
-
-	delete dog, clonedDog, cat, clonedCat;
+int main(void)
+{
+	puts("==============================");
+	example_with_middler(); // recommended
+	puts("==============================");
+	example_without_middler();
+	puts("==============================");
 	return 0;
 }
