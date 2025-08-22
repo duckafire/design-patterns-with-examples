@@ -25,7 +25,7 @@ different memory address.
 
 #include <cstdio>
 
-// Prototype Abstract Class
+// Prototype abstract class
 class IClone
 {
 public:
@@ -39,7 +39,7 @@ public:
 	virtual IClone* clone(void) const = 0;
 };
 
-// Concrete Prototype
+// Concrete prototype
 class Bacterium: public IClone
 {
 private:
@@ -75,7 +75,7 @@ public:
 	}
 };
 
-// Client Code
+// Client code
 void example_with_middler(void)
 {
 	Bacterium *origi, *clone;

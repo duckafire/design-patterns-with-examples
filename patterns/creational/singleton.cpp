@@ -56,12 +56,12 @@ public:
 	FantasyDB(const FantasyDB &other) = delete;
 	void operator=(const FantasyDB &other) = delete;
 
-	static FantasyDB* instance(void)
+	static const FantasyDB* instance(void)
 	{
 		return FantasyDB::inst;
 	}
 
-	void query(const char *sql)
+	void query(const char *sql) const
 	{
 		// ...
 		printf("Data bank query: \n%s\n\nOK\n\n", sql);
