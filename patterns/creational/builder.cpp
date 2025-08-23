@@ -1,183 +1,182 @@
 /*
 
-BUILDER: special class, created to instantiate a complex object (step by step).
+BUILDER: implementation that allows instantiate a complex object, step by step.
 
-This design pattern can be divided into:
+It can be divided in:
 
-* Builder Interface: interface or abstract class created to set common
-methods for Concrete Builders.
+* Builder Interface: define common methods for Concrete Builders.
 
-* Product: object that will be instantiated by a Concrete Builder.
+* Product: class used to create the product of the Concrete Builder.
 
-* Concrete Builder: a class that extends the Builder Interface and can
-create (step by step) and return a Product instance.
+* Concrete Builder: create (step by step) and return a speficic product
+(when it is required, otherwise return itself).
 
-* Builder Director: contains sets of instructions (inside specific methods)
-to create pre-defined objects, based on methods of a Concrete Builder
+* Director: contains set ones of instructios to create specific Products,
+base in a specific Concrete Builder.
 
 */
 
-#include <iostream>
+#include <cstdio>
 
-// builder "interface/abstract class" (optional)
-template<typename TBuilder>
-class Builder {
+// Builder "interface"
+class Builder
+{
+protected:
+	virtual void new_product(void) = 0;
+	virtual void delete_product(void) = 0;
+	virtual void reset_product(void) = 0;
+
+	// Implement manually in derived classes:
+	// <product> build(void);
+	// void reset(void); // optional
+};
+
+// Product
+class Entity
+{
+	friend class EntityBuilder;
+
 private:
-	TBuilder *_product;
+	int x, y;
+	int width, height;
+	short speed, minspeed, maxspeed;
+	short hp, maxhp;
+
+public:
+	// Explicit empty constructor
+	Entity(void)
+	{}
+
+	// This is needed for this
+	// Builder implementation
+	Entity(const Entity &other) = default;
+
+	void info(void) const
+	{
+		printf("Positions: %d, %d\nDimensions: %dx%d\nSpeed (%d-%d): %d\nHP (max: %d): %d\n\n", this->x, this->y, this->width, this->height, this->minspeed, this->maxspeed, this->speed, this->maxhp, this->hp);
+	}
+};
+
+// Concrete builder
+class EntityBuilder final: protected Builder
+{
+private:
+	Entity *product;
 
 protected:
-	void new_product(void){
-		if(this->_product != nullptr)
-			return;
-
-		this->_product = new TBuilder();
+	void new_product(void) override
+	{
+		this->product = new Entity();
 	}
 
-	void del_product(void){
-		if(this->_product == nullptr)
-			return;
-
-		delete this->_product;
-		this->_product = nullptr;
+	void delete_product(void) override
+	{
+		delete this->product;
 	}
 
-	TBuilder* product(void){
-		return this->_product;
-	}
-
-public:
-	~Builder(void){
-		this->del_product();
-	}
-
-	TBuilder* build(void){
-		TBuilder *tmp;
-		tmp = new TBuilder(*(this->_product));
-
-		// it is safe,
-		// see: https://isocpp.org/wiki/faq/freestore-mgmt#delete-this
-		delete this;
-		return tmp;
-	}
-};
-
-// product
-class Player {
-public:
-	int x, y;
-	bool isRunning, isFalling;
-	short hp, speed, gravity;
-	unsigned short width, height;
-
-	Player(void){
-		// necessary to instance an empty "product"
-	}
-
-	Player(const Player &builderProduct) = default;
-
-	void display_status(void){
-		std::cout << "X: "          << this->x         << std::endl;
-		std::cout << "Y: "          << this->y         << std::endl;
-		std::cout << "Is running: " << this->isRunning << std::endl;
-		std::cout << "Is falling: " << this->isFalling << std::endl;
-		std::cout << "Hp: "         << this->hp        << std::endl;
-		std::cout << "Speed: "      << this->speed     << std::endl;
-		std::cout << "Gravity: "    << this->gravity   << std::endl;
-		std::cout << "Width: "      << this->width     << std::endl;
-		std::cout << "Height: "     << this->height    << std::endl;
-		std::cout << std::endl;
-	}
-};
-
-// builder
-class PlayerBuilder: public Builder<Player> {
-public:
-	PlayerBuilder(void){
+	void reset_product(void) override
+	{
+		this->delete_product();
 		this->new_product();
 	}
 
-	PlayerBuilder* set_position(int x, int y){
-		this->product()->x = x;
-		this->product()->y = y;
-		return this;
-	}
-
-	PlayerBuilder* set_dimensions(unsigned short width, unsigned short height){
-		this->product()->width  = width;
-		this->product()->height = height;
-		return this;
-	}
-
-	PlayerBuilder* set_hp(short quantity){
-		this->product()->hp = quantity;
-		return this;
-	}
-
-	PlayerBuilder* set_physics(short speed, short gravity){
-		this->product()->speed   = speed;
-		this->product()->gravity = gravity;
-		return this;
-	}
-
-	PlayerBuilder* is_running(bool state){
-		this->product()->isRunning = state;
-		return this;
-	}
-
-	PlayerBuilder* is_falling(bool state){
-		this->product()->isFalling = state;
-		return this;
-	}
-};
-
-// director (optional)
-class PlayerDirector {
 public:
-	Player* tank(void){
-		return (new PlayerBuilder())
+	EntityBuilder(void)
+	{
+		this->new_product();
+	}
+
+	// For this Builder implementation,
+	// destructors are illegal.
+	// ~EntityBuilder(void)
+	// {}
+	
+	Entity* build(void)
+	{
+		Entity *tmp = new Entity( *(this->product) );
+		this->delete_product(); // destructor be like
+
+		// This is safe, see:
+		// https://isocpp.org/wiki/faq/freestore-mgmt#delete-this
+		delete this;
+
+		return tmp;
+	}
+
+	void reset(void)
+	{
+		this->reset_product();
+	}
+
+	EntityBuilder* set_position(int x, int y)
+	{
+		this->product->x = x;
+		this->product->y = y;
+		return this;
+	}
+
+	EntityBuilder* set_dimensions(int w, int h)
+	{
+		this->product->width  = w;
+		this->product->height = h;
+		return this;
+	}
+
+	EntityBuilder* set_speed(short normal, short min, short max)
+	{
+		this->product->speed    = normal;
+		this->product->minspeed = min;
+		this->product->maxspeed = max;
+		return this;
+	}
+
+	EntityBuilder* set_hp(short max)
+	{
+		this->product->hp    = max;
+		this->product->maxhp = max;
+		return this;
+	}
+};
+
+// Director
+class EntityDirector final
+{
+public:
+	static Entity* slime(void)
+	{
+		return (new EntityBuilder())
 			->set_position(0, 0)
-			->set_dimensions(100, 225)
-			->set_hp(400)
-			->set_physics(25, 1)
-			->is_running(false)
-			->is_falling(false)
+			->set_dimensions(50, 35)
+			->set_speed(15, 2, 30)
+			->set_hp(10)
 			->build();
 	}
 
-
-	Player* shooter(void){
-		return (new PlayerBuilder())
+	static Entity* zombie(void)
+	{
+		return (new EntityBuilder())
 			->set_position(0, 0)
-			->set_dimensions(80, 150)
-			->set_hp(120)
-			->set_physics(45, 1)
-			->is_running(true)
-			->is_falling(false)
+			->set_dimensions(55, 80)
+			->set_speed(20, 5, 50)
+			->set_hp(30)
 			->build();
 	}
 };
 
-// client code ("optional")
+// Client code
 int main(void){
-	PlayerDirector *director;
-	Player *melee, *shooter;
-
-	director = new PlayerDirector();
-
-	melee = (new PlayerBuilder())
-		->set_hp(250)
-		->is_running(true)
-		->set_position(25, 25)
-		->set_physics(40, 1)
-		->is_falling(false)
-		->set_dimensions(110, 170)
+	Entity *player = (new EntityBuilder)
+		->set_hp(100)
+		->set_position(0, 0)
+		->set_speed(45, 1, 150)
+		->set_dimensions(55, 80)
 		->build();
 
-	shooter = director->shooter();
+	Entity *zombie = EntityDirector::zombie();
 
-	melee->display_status();
-	shooter->display_status();
+	player->info();
+	zombie->info();
 
-	delete melee, shooter;
+	delete player, zombie;
 	return 0;
 }
