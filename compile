@@ -1,105 +1,169 @@
 #!/usr/bin/env bash
 
+declare -r COMPILATOR="g++"
+
 #########################################################################################
 
-set -o pipefail
+if [[ $# -eq 0 ]]
+then
+	declare -r LF='\n'
 
-declare -ri TRUE=0
-declare -ri FALSE=1
+	echo -e \
+'compile <-g <group0>> <file0> [-g group] [fileN]'$LF\
+' '$LF\
+'Compile files present in a sub-directory from `patterns/`'$LF\
+'(specified by `-g`) and store them in `bin/`.'$LF
 
-if [[ $# -eq 0 ]]; then
-	# group: subdirectory name from "./pattern/"
-	echo './compile [-a] [-g <groupA>] <file-A1> [...] [file-AN] ... [-g <groupB>] [file-B0] ...'
 	exit 0
 fi
 
-declare -r INPUT=("${@}")
-declare -r ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+#########################################################################################
 
-message(){
-	echo "[${BASH_LINENO[0]}] $1."
+format_line_number()
+{
+	local num="${BASH_LINENO[0]}"
+
+	case ${#num} in
+		1) num="00$num" ;;
+		2) num="0$num"  ;;
+	esac
+
+	echo "($num)"
+}
+
+fatal_error()
+{
+	echo -e '[\e[31mcompile: \e[31;1mERROR \e[0m\e[31m'"$(format_line_number)"'\e[0m]: '"$1"'.\n'
+	exit 1
+}
+
+warn_error()
+{
+	echo -e '[\e[33mcompile: \e[33;1mWARNING \e[0m\e[33m'"$(format_line_number)"'\e[0m]: '"$1"'.'
+}
+
+success_msg()
+{
+	echo -e '[\e[32mcompile: \e[32;1mSUCCESS \e[0m\e[32m'"$(format_line_number)"'\e[0m]: '"$1"'.'
 }
 
 #########################################################################################
 
-declare -r SRC_DIR="$ROOT/patterns"
-declare -r DEST_DIR="$ROOT/bin"
-
-if [[ ! -d "$SRC_DIR" ]]; then
-	message "Directory ('$SRC_DIR') not found"
-	exit 1
+if [[ $# -lt 3 ]]
+then
+	fatal_error "Insufficient arguments (min: 3)"
 fi
 
 #########################################################################################
 
-declare src_file=""
-declare dest_file=""
-declare full_dest_dir=""
-declare sub_dir=""
+if ! type "$COMPILATOR" &> /dev/null
+then
+	fatal_error "Compilator ('$COMPILATOR') not found"
+fi
 
-declare -i gpp_status=0
-declare -i is_sub_dir=$FALSE
-declare -i sub_dir_memory=0
-declare -i sub_dir_memory_storage=0
+declare -r DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+declare -r PAT_DIR="$DIR/patterns"
+declare -r BIN_DIR="$DIR/bin"
 
+declare -ri FALSE=1
+declare -ri TRUE=0
 
-separator(){
-	echo -e "\n#########################################################################################\n"
-}
+declare group="$PAT_DIR/"
+declare -i isgroup=$FALSE
+declare -i invalidgroup=$FALSE
+declare -i validgroupfound=$FALSE
+declare -i hascppext=$FALSE
 
-separator
+if [[ ! -d "$BIN_DIR" ]]
+then
+	mkdir "$BIN_DIR"
+	success_msg "The binary directory was created"
+fi
 
-for input in ${INPUT[@]}; do
-	if [[ $is_sub_dir -eq $TRUE ]]; then
-		# $sub_dir can be empty, then it must be container "/" as suffix.
-		# if empty:     $SRC/$sub_dir$foo -> ./foo.bar
-		# if not empty: $SRC/$sub_dir$foo -> ./foo/sub/foo.bar
-		sub_dir="$input/"
-		is_sub_dir=$FALSE
+for arg in ${@}
+do
+	hascppext=$FALSE
 
-		if [[ ! -d "$SRC_DIR/$sub_dir" ]]; then
-			message "Subdirectory ('$SRC_DIR/$sub_dir') not found"
-			sub_dir=""
-			separator
+	if [[ "$arg" = "-g" ]]
+	then
+		isgroup=$TRUE
+
+		if [[ $invalidgroup -eq $TRUE ]]
+		then
+			validgroupfound=$TRUE
 		fi
+
+		invalidgroup=$FALSE
 		continue
 	fi
 
-	if [[ "$input" = "-d" ]]; then
-		is_sub_dir=$TRUE
-		sub_dir_memory=sub_dir_memory+1
+	if [[ $invalidgroup -eq $TRUE ]]
+	then
+		warn_error "File ('$arg.cpp') ignored"
 		continue
 	fi
 
+	if [[ $isgroup -eq $TRUE ]]
+	then
+		if [[ ! -d "$PAT_DIR/$arg" ]]
+		then
+			warn_error "Group ('$arg/') not found. The next files will be ignored until that a valid group is found"
+			invalidgroup=$TRUE
+		fi
 
-	if [[ $sub_dir_memory -gt $sub_dir_memory_storage ]]; then
-		sub_dir_memory_storage=$sub_dir_memory
-		full_dest_dir="$DEST_DIR/$sub_dir"
+		if [[ $validgroupfound -eq $TRUE ]]
+		then
+			validgroupfound=$FALSE
+			warn_error "A valid group ('$arg/') was found, the compilations can continue"
+		fi
 
-		test ! -d "$full_dest_dir" && mkdir --parents "$full_dest_dir"
-	fi
-
-
-	src_file="$SRC_DIR/$sub_dir$input.cpp"
-	dest_file="$full_dest_dir$input"
-
-	if [[ ! -f "$src_file" ]]; then
-		message "File ('$src_file') not found"
-		separator
+		isgroup=$FALSE
+		group="$arg"
 		continue
 	fi
 
+	if [[ "${arg: -4}" = ".cpp" ]]
+	then
+		warn_error "It is unnecessary to suffix the file name with '.cpp'"
 
-	g++ "$src_file" -o "$dest_file"
-	gpp_status=$?
+		if [[ ${#arg} -lt 5 ]]
+		then
+			warn_error "Invalid file name ('$arg')"
+			continue
+		fi
 
-	if [[ $gpp_status -eq 0 ]]; then
-		message "The file ('$src_file') was compiled"
+		# foo.cpp -> foo
+		arg="${arg: 0:${#arg}-4}"
+	fi
+
+	if [[ ! -f "$PAT_DIR/$group/$arg.cpp" ]]
+	then
+		warn_error "File ('patterns/$group/$arg.cpp') not found"
+		continue
+	fi
+
+	if [[ ! -s "$PAT_DIR/$group/$arg.cpp" ]]
+	then
+		warn_error "Empty files ('patterns/$group/$arg.cpp') are invalid"
+		continue
+	fi
+
+	#echo "$COMPILATOR /home/.../patterns/$group/$arg.cpp -o /home/.../bin/$arg"
+	eval "$COMPILATOR $PAT_DIR/$group/$arg.cpp -o $BIN_DIR/$arg"
+
+	if [[ $? -ne $TRUE ]]
+	then
+		warn_error "A compilation error occur"
 	else
-		message "A compilation error occur. File: '$src_file'"
+		success_msg "File ('patterns/$group/$arg.cpp' -> 'bin/$arg') compiled with success"
 	fi
-
-	separator
 done
+
+if [[ $isgroup -eq $TRUE ]]
+then
+	warn_error "Group not specified"
+fi
+
+exit 0
 
 #########################################################################################
