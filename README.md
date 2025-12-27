@@ -13,9 +13,9 @@ a project.
 The purpose of this project is to introduce the main types of Design
 Pattern in programming, in a simple, easy and didactic way.
 
-The patterns were separated in distinct files, being formed by a short
-description (in top) and by executable code (that makes use of the pattern).
-The concept of the code can be adapted to a lot of programming languages.
+The patterns are separated in distinct directories, being formed by a short README and
+by compilable files (that formed the pattern). The concept of the code can be adapted
+to a lot of programming languages.
 
 > [!WARNING]
 > It is worth remembering, even though it is useful, these patterns will not
@@ -35,7 +35,7 @@ usage instructions, descriptions, and tips related to the patterns in this secti
 	* Abstract Factory
 	* Builder
 	* Factory Method
-	* Prototype
+	* [Prototype](./patterns/gof/creational/prototype/Bacterium.java)
 	* Singleton
 * Structural:
 	* Adapter
