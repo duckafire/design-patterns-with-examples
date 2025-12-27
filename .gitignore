@@ -1,1 +1,8 @@
-bin/
+byte-code/
+.class
+
+foo
+bar
+foo.*
+todo
+TODO
