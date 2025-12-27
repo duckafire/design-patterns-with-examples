@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+# ./man             : compiles ALL Java files from `patterns/**/*`.
+# ./main [group...] : runs all "groups" listed.
+
+DEST="byte-code/"
+
+if [ $# -eq 0 ]
+then
+	test -d "$DEST" && rm -r "$DEST"
+	javac -d "$DEST" $(find ./patterns -type f -name *.java)
+	exit 0
+fi
+
+for mainFile in $@
+do
+	java -cp "$DEST" "$mainFile"
+	echo ""
+done
