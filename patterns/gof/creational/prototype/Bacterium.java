@@ -1,6 +1,4 @@
-package gof.creational;
-
-import gof.creational.IClone;
+package gof.creational.prototype;
 
 public class Bacterium implements IClone
 {

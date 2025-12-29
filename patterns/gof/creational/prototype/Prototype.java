@@ -1,4 +1,4 @@
-import gof.creational.Bacterium;
+import gof.creational.prototype.Bacterium;
 
 class Prototype
 {

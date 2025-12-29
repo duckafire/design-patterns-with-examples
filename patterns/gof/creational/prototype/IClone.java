@@ -1,4 +1,4 @@
-package gof.creational;
+package gof.creational.prototype;
 
 interface IClone
 {
