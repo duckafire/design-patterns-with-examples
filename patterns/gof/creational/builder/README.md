@@ -15,5 +15,5 @@ it returns itself).
 specific Concrete Builder.
 
 > [!TIP]
-> Unlike [Abstract Factories](../abstract-factory), Directors are based in a single
+> Unlike [Abstract Factories](../abstract_factory), Directors are based in a single
 > *complex* object, and ti depends of other class (a Concrete Builder).

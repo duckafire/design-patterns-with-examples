@@ -34,7 +34,7 @@ usage instructions, descriptions, and tips related to the patterns in this secti
 * Creational:
 	* Abstract Factory
 	* [Builder](./patterns/gof/creational/builder)
-	* Factory Method
+	* [Factory Method](./patterns/gof/creational/factory_method)
 	* [Prototype](./patterns/gof/creational/prototype)
 	* [Singleton](./patterns/gof/creational/singleton)
 * Structural:

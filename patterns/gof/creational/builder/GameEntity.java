@@ -1,5 +1,6 @@
 package gof.creational.builder;
 
+// Product.
 public class GameEntity
 {
 	// Using "default" access modifier
