@@ -33,10 +33,10 @@ usage instructions, descriptions, and tips related to the patterns in this secti
 
 * Creational:
 	* Abstract Factory
-	* Builder
+	* [Builder](./patterns/gof/creational/builder)
 	* Factory Method
-	* [Prototype](./patterns/gof/creational/prototype/Bacterium.java)
-	* Singleton
+	* [Prototype](./patterns/gof/creational/prototype)
+	* [Singleton](./patterns/gof/creational/singleton)
 * Structural:
 	* Adapter
 	* Bridge
