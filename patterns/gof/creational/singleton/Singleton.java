@@ -7,6 +7,7 @@ class Singleton
 		CacheMan.instance().addPair("foo", "bar");
 
 		System.out.println(
+			"Values from cache: " +
 			CacheMan.instance().getValueOf("foo")
 		);
 	}
