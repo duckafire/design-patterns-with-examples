@@ -32,7 +32,7 @@ and [John Vlissibes][jhon]. Their book is a catalog of Design Pattern, with
 usage instructions, descriptions, and tips related to the patterns in this section.
 
 * Creational:
-	* Abstract Factory
+	* [Abstract Factory](./patterns/gof/creational/abstract_factory)
 	* [Builder](./patterns/gof/creational/builder)
 	* [Factory Method](./patterns/gof/creational/factory_method)
 	* [Prototype](./patterns/gof/creational/prototype)
